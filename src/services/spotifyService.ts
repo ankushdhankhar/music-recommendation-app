@@ -62,7 +62,8 @@ class SpotifyService {
       throw new Error('Spotify Client ID not configured. Please add REACT_APP_SPOTIFY_CLIENT_ID to your .env file.');
     }
 
-    const redirectUri = process.env.REACT_APP_SPOTIFY_REDIRECT_URI || window.location.origin;
+    const redirectUri = (typeof window !== 'undefined' ? window.location.origin : process.env.REACT_APP_SPOTIFY_REDIRECT_URI) || 'http://localhost:3000';
+
     const scopes = [
       'user-read-private',
       'user-read-email',

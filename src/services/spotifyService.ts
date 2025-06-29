@@ -39,14 +39,16 @@ class SpotifyService {
   private accessToken: string | null = null;
 
   constructor() {
-    this.spotify = new SpotifyWebApi();
+  this.spotify = new SpotifyWebApi();
 
-  // Immediately try loading token from localStorage
-    const storedToken = localStorage.getItem('spotify_access_token');
-    if (storedToken) {
-      this.setAccessToken(storedToken);
-    }
-  } 
+  const storedToken = localStorage.getItem('spotify_access_token');
+  console.log("Stored token from localStorage:", storedToken);
+
+  if (storedToken) {
+    this.setAccessToken(storedToken);
+  }
+}
+
 
 
   // Enable demo mode for development when Spotify auth is not available
@@ -128,6 +130,8 @@ class SpotifyService {
 
   // Get user profile
   async getUserProfile(): Promise<SpotifyUserProfile> {
+    console.log('Access token before calling getMe():', this.accessToken);
+
   const token = this.getStoredToken(); // load from localStorage
   if (!token || token === 'demo_mode') {
     console.warn('No valid access token found.');

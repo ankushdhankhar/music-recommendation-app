@@ -1,4 +1,5 @@
 import SpotifyWebApi from 'spotify-web-api-js';
+import { generateCodeChallenge, generateCodeVerifier } from './pkceUtils';
 
 export interface SpotifyTrack {
   id: string;
@@ -64,35 +65,34 @@ class SpotifyService {
   }
 
   // Spotify OAuth setup
-  getAuthUrl(): string {
-    const clientId = process.env.REACT_APP_SPOTIFY_CLIENT_ID;
-    
-    if (!clientId) {
-      throw new Error('Spotify Client ID not configured. Please add REACT_APP_SPOTIFY_CLIENT_ID to your .env file.');
-    }
+  async getAuthUrl(): Promise<string> {
+   const clientId = process.env.REACT_APP_SPOTIFY_CLIENT_ID;
 
     const redirectUri = (typeof window !== 'undefined' ? window.location.origin : process.env.REACT_APP_SPOTIFY_REDIRECT_URI) || 'http://localhost:3000';
+  const verifier = generateCodeVerifier();
+  const challenge = await generateCodeChallenge(verifier);
 
-    const scopes = [
-      'user-read-private',
-      'user-read-email',
-      'user-top-read',
-      'user-read-recently-played',
-      'playlist-read-private',
-      'playlist-read-collaborative'
-    ];
+  localStorage.setItem('spotify_code_verifier', verifier);
 
-    const authUrl = `https://accounts.spotify.com/authorize?` +
-      `client_id=${clientId}&` +
-      `response_type=token&` +
-      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-      `scope=${encodeURIComponent(scopes.join(' '))}&` +
-      `show_dialog=true`;
+  const scopes = [
+    'user-read-private',
+    'user-read-email',
+    'user-top-read',
+    'user-read-recently-played',
+    'playlist-read-private',
+    'playlist-read-collaborative'
+  ];
 
+  return `https://accounts.spotify.com/authorize?` +
+    `client_id=${clientId}&` +
+    `response_type=code&` +
+    `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+    `scope=${encodeURIComponent(scopes.join(' '))}&` +
+    `code_challenge_method=S256&` +
+    `code_challenge=${challenge}`;
+}
+   
 
-    console.log("SPOTIFY AUTH URL:", authUrl);  
-    return authUrl;
-  }
 
   // Set access token from OAuth callback
   setAccessToken(token: string): void {

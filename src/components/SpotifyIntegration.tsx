@@ -15,35 +15,46 @@ const SpotifyIntegration: React.FC<SpotifyIntegrationProps> = ({ onAuthChange })
   handleOAuthCallback(); // Always handle callback first
 }, []);
 
-const handleOAuthCallback = () => {
-  const hash = window.location.hash;
+  const handleOAuthCallback = async () => {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
 
-  if (hash.includes("access_token")) {
-    const params = new URLSearchParams(hash.substring(1));
-    const token = params.get("access_token");
+  if (code) {
+    const verifier = localStorage.getItem('spotify_code_verifier');
+    if (!verifier) return;
 
-    if (token) {
-      spotifyService.setAccessToken(token);
-      setIsAuthenticated(true);
-      onAuthChange(true);
+    try {
+      const response = await fetch('https://accounts.spotify.com/api/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams({
+          client_id: process.env.REACT_APP_SPOTIFY_CLIENT_ID!,
+          grant_type: 'authorization_code',
+          code,
+          redirect_uri: window.location.origin,
+          code_verifier: verifier
+        })
+      });
 
-      // Clean the hash from URL
-      window.location.hash = '';
-
-      // Now fetch user profile with valid token
-      fetchUserProfile();
-    }
-  } else {
-    // No hash → check if already authenticated (e.g. on reload)
-    const authenticated = spotifyService.isAuthenticated();
-    setIsAuthenticated(authenticated);
-    onAuthChange(authenticated);
-
-    if (authenticated) {
-      fetchUserProfile();
+      const data = await response.json();
+      if (data.access_token) {
+        spotifyService.setAccessToken(data.access_token);
+        setIsAuthenticated(true);
+        onAuthChange(true);
+        fetchUserProfile();
+        window.history.replaceState({}, document.title, window.location.pathname); // clean URL
+      } else {
+        throw new Error(data.error_description || 'Token exchange failed');
+      }
+    } catch (err) {
+      console.error('Token exchange error:', err);
+      setError('Spotify authentication failed. Please try again.');
     }
   }
 };
+
 
 
   // const handleOAuthCallback = () => {
@@ -77,15 +88,16 @@ const handleOAuthCallback = () => {
 };
 
 
-  const handleLogin = () => {
-    try {
-      const authUrl = spotifyService.getAuthUrl();
-      window.location.href = authUrl;
-    } catch (error) {
-      console.error('Error getting auth URL:', error);
-      setError('Failed to start Spotify authentication. Check your configuration.');
-    }
-  };
+  const handleLogin = async () => {
+  try {
+    const authUrl = await spotifyService.getAuthUrl(); // ✅ await the promise
+    window.location.href = authUrl;
+  } catch (error) {
+    console.error('Error getting auth URL:', error);
+    setError('Failed to start Spotify authentication. Check your configuration.');
+  }
+};
+
 
 
   const handleLogout = () => {

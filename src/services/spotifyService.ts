@@ -40,7 +40,14 @@ class SpotifyService {
 
   constructor() {
     this.spotify = new SpotifyWebApi();
-  }
+
+  // Immediately try loading token from localStorage
+    const storedToken = localStorage.getItem('spotify_access_token');
+    if (storedToken) {
+      this.setAccessToken(storedToken);
+    }
+  } 
+
 
   // Enable demo mode for development when Spotify auth is not available
   enableDemoMode(): void {

@@ -12,25 +12,54 @@ const SpotifyIntegration: React.FC<SpotifyIntegrationProps> = ({ onAuthChange })
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+  handleOAuthCallback(); // Always handle callback first
+}, []);
 
-    // Handle OAuth callback
-    handleOAuthCallback();
-  }, []);
+const handleOAuthCallback = () => {
+  const hash = window.location.hash;
 
-  const handleOAuthCallback = () => {
-    const hash = window.location.hash;
-    if (hash) {
-      const token = hash.split('&')[0].split('=')[1];
-      if (token) {
-        spotifyService.setAccessToken(token);
-        setIsAuthenticated(true);
-        onAuthChange(true);
-        fetchUserProfile();
-        // Clean up URL
-        window.location.hash = '';
-      }
+  if (hash.includes("access_token")) {
+    const params = new URLSearchParams(hash.substring(1));
+    const token = params.get("access_token");
+
+    if (token) {
+      spotifyService.setAccessToken(token);
+      setIsAuthenticated(true);
+      onAuthChange(true);
+
+      // Clean the hash from URL
+      window.location.hash = '';
+
+      // Now fetch user profile with valid token
+      fetchUserProfile();
     }
-  };
+  } else {
+    // No hash → check if already authenticated (e.g. on reload)
+    const authenticated = spotifyService.isAuthenticated();
+    setIsAuthenticated(authenticated);
+    onAuthChange(authenticated);
+
+    if (authenticated) {
+      fetchUserProfile();
+    }
+  }
+};
+
+
+  // const handleOAuthCallback = () => {
+  //   const hash = window.location.hash;
+  //   if (hash) {
+  //     const token = hash.split('&')[0].split('=')[1];
+  //     if (token) {
+  //       spotifyService.setAccessToken(token);
+  //       setIsAuthenticated(true);
+  //       onAuthChange(true);
+  //       fetchUserProfile();
+  //       // Clean up URL
+  //       window.location.hash = '';
+  //     }
+  //   }
+  // };
 
   const fetchUserProfile = async () => {
   setLoading(true);

@@ -12,14 +12,6 @@ const SpotifyIntegration: React.FC<SpotifyIntegrationProps> = ({ onAuthChange })
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check if user is already authenticated
-    const authenticated = spotifyService.isAuthenticated();
-    setIsAuthenticated(authenticated);
-    onAuthChange(authenticated);
-
-    if (authenticated) {
-      fetchUserProfile();
-    }
 
     // Handle OAuth callback
     handleOAuthCallback();

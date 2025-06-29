@@ -41,17 +41,20 @@ const SpotifyIntegration: React.FC<SpotifyIntegrationProps> = ({ onAuthChange })
   };
 
   const fetchUserProfile = async () => {
-    setLoading(true);
-    try {
-      const profile = await spotifyService.getUserProfile();
-      setUserProfile(profile);
-    } catch (err) {
-      setError('Failed to fetch user profile');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  setLoading(true);
+  try {
+    console.log('Attempting to fetch Spotify user profile...');
+    const profile = await spotifyService.getUserProfile();
+    setUserProfile(profile);
+    console.log('Spotify profile:', profile);
+  } catch (err: any) {
+    setError(err.message || 'Failed to fetch user profile');
+    console.error('User profile fetch error:', err);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleLogin = () => {
     try {

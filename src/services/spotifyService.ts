@@ -121,23 +121,31 @@ class SpotifyService {
 
   // Get user profile
   async getUserProfile(): Promise<SpotifyUserProfile> {
-    if (this.isDemoMode()) {
-      return this.getDemoUserProfile();
-    }
-
-    try {
-      const profile = await this.spotify.getMe();
-      return {
-        id: profile.id,
-        display_name: profile.display_name || 'User',
-        images: profile.images || [],
-        followers: profile.followers || { total: 0 }
-      };
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-      throw new Error('Failed to fetch user profile');
-    }
+  const token = this.getStoredToken(); // load from localStorage
+  if (!token || token === 'demo_mode') {
+    console.warn('No valid access token found.');
+    throw new Error('No valid Spotify access token found');
   }
+
+  this.spotify.setAccessToken(token); // Ensure it’s set
+
+  try {
+    const profile = await this.spotify.getMe();
+    console.log('Fetched Spotify profile:', profile);
+    return {
+      id: profile.id,
+      display_name: profile.display_name || 'User',
+      images: profile.images || [],
+      followers: profile.followers || { total: 0 }
+    };
+  } catch (error: any) {
+    console.error('Error fetching user profile:', error);
+    throw new Error(
+      error?.body?.error?.message || 'Failed to fetch user profile'
+    );
+  }
+}
+
 
   // Get demo user profile
   private getDemoUserProfile(): SpotifyUserProfile {

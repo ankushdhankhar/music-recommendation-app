@@ -17,9 +17,13 @@ const MusicForm: React.FC<MusicFormProps> = ({ onSubmit, loading, spotifyConnect
   });
 
   const genres = [
-    'Rock', 'Pop', 'Hip Hop', 'Electronic', 'Jazz', 'Classical', 
-    'Country', 'R&B', 'Indie', 'Alternative', 'Folk', 'Reggae'
-  ];
+  // Western
+  'Rock', 'Pop', 'Hip Hop', 'Electronic', 'Jazz', 'Classical',
+  'Country', 'R&B', 'Indie', 'Alternative', 'Folk', 'Reggae',
+  // Indian
+  'Punjabi', 'Haryanvi', 'Bollywood', 'Desi Pop', 'Bhangra', 'Indian Hip Hop'
+];
+
 
   const moods = [
     'Happy', 'Sad', 'Energetic', 'Calm', 'Romantic', 'Nostalgic', 

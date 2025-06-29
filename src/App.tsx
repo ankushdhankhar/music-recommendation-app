@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import MusicForm from './components/MusicForm';
 import RecommendationCard from './components/RecommendationCard';
 import LoadingSpinner from './components/LoadingSpinner';
+import SpotifyIntegration from './components/SpotifyIntegration';
 import { getMusicRecommendations } from './services/aiService';
 
 export interface UserPreferences {
@@ -24,19 +25,28 @@ const App: React.FC = () => {
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [spotifyConnected, setSpotifyConnected] = useState(false);
 
   const handleGetRecommendations = async (preferences: UserPreferences) => {
     setLoading(true);
     setError(null);
     
     try {
-      const newRecommendations = await getMusicRecommendations(preferences);
+      const newRecommendations = await getMusicRecommendations(preferences, spotifyConnected);
       setRecommendations(newRecommendations);
     } catch (err) {
       setError('Failed to get recommendations. Please try again.');
       console.error('Error:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSpotifyAuthChange = (isAuthenticated: boolean) => {
+    setSpotifyConnected(isAuthenticated);
+    // Clear previous recommendations when auth status changes
+    if (!isAuthenticated) {
+      setRecommendations([]);
     }
   };
 
@@ -53,12 +63,17 @@ const App: React.FC = () => {
           </p>
         </div>
 
+        {/* Spotify Integration */}
+        <div className="max-w-4xl mx-auto mb-8">
+          <SpotifyIntegration onAuthChange={handleSpotifyAuthChange} />
+        </div>
+
         {/* Main Content */}
         <div className="max-w-4xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-8">
             {/* Form Section */}
             <div>
-              <MusicForm onSubmit={handleGetRecommendations} loading={loading} />
+              <MusicForm onSubmit={handleGetRecommendations} loading={loading} spotifyConnected={spotifyConnected} />
             </div>
 
             {/* Results Section */}

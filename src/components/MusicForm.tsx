@@ -4,9 +4,10 @@ import { UserPreferences } from '../App';
 interface MusicFormProps {
   onSubmit: (preferences: UserPreferences) => void;
   loading: boolean;
+  spotifyConnected: boolean;
 }
 
-const MusicForm: React.FC<MusicFormProps> = ({ onSubmit, loading }) => {
+const MusicForm: React.FC<MusicFormProps> = ({ onSubmit, loading, spotifyConnected }) => {
   const [preferences, setPreferences] = useState<UserPreferences>({
     genres: [],
     mood: '',
@@ -140,8 +141,19 @@ const MusicForm: React.FC<MusicFormProps> = ({ onSubmit, loading }) => {
           disabled={loading || preferences.genres.length === 0 || !preferences.mood || !preferences.energy}
           className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? 'Getting Recommendations...' : 'Get AI Recommendations 🎵'}
+          {loading ? 'Getting Recommendations...' : spotifyConnected ? 'Get AI Recommendations (Spotify Enhanced) 🎵' : 'Get AI Recommendations 🎵'}
         </button>
+        
+        {spotifyConnected && (
+          <div className="mt-3 p-3 bg-green-900/30 border border-green-700 rounded-lg">
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <span className="text-green-300 text-sm">
+                Spotify integration enabled - recommendations will be based on your listening history!
+              </span>
+            </div>
+          </div>
+        )}
       </form>
     </div>
   );

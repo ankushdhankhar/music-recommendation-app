@@ -5,6 +5,8 @@ A responsive web application that uses AI to provide personalized music recommen
 ## Features
 
 - **🎯 Personalized Recommendations**: AI-powered suggestions based on genres, mood, energy level, and listening history
+- **🎵 Spotify Integration**: Connect your Spotify account to get recommendations based on your actual listening data
+- **📊 Audio Analysis**: Uses Spotify's audio features (energy, valence, danceability) for precise recommendations
 - **📱 Responsive Design**: Beautiful, mobile-friendly interface built with Tailwind CSS
 - **⚡ Real-time Analysis**: Instant processing of user preferences to generate tailored recommendations
 - **🎨 Modern UI**: Dark theme with gradient backgrounds and smooth animations
@@ -14,7 +16,8 @@ A responsive web application that uses AI to provide personalized music recommen
 
 - **Frontend**: React 18 + TypeScript
 - **Styling**: Tailwind CSS
-- **AI Integration**: OpenAI API (GPT)
+- **Music API**: Spotify Web API
+- **AI Integration**: Groq API (Llama 3)
 - **Build Tool**: Create React App
 - **HTTP Client**: Axios
 
@@ -24,7 +27,8 @@ A responsive web application that uses AI to provide personalized music recommen
 
 - Node.js (v16 or higher)
 - npm or yarn
-- OpenAI API key (optional for demo mode)
+- Spotify Developer Account (for Spotify integration)
+- Groq API key (optional for enhanced AI recommendations)
 
 ### Installation
 
@@ -38,24 +42,40 @@ A responsive web application that uses AI to provide personalized music recommen
    npm install
    ```
 
-3. **Set up environment variables** (optional for full AI integration):
+3. **Set up Spotify App** (required for Spotify integration):
+   - Go to [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
+   - Create a new app (choose "Web API" as the app type)
+   - In "Redirect URIs", add: `http://localhost:3000`
+   - Copy your Client ID from the app settings
+
+4. **Set up environment variables**:
    ```bash
    cp .env.example .env
    ```
-   Edit `.env` and add your OpenAI API key:
+   Edit `.env` and add your credentials:
    ```
-   REACT_APP_OPENAI_API_KEY=your_openai_api_key_here
+   REACT_APP_SPOTIFY_CLIENT_ID=your_spotify_client_id_here
+   REACT_APP_GROQ_API_KEY=your_groq_api_key_here
    ```
+   
+   **Important**: Make sure your Spotify app settings have `http://localhost:3000` as a redirect URI
 
-4. **Start the development server**:
+5. **Start the development server**:
    ```bash
    npm start
    ```
 
-5. **Open your browser** and visit `http://localhost:3000`
+6. **Open your browser** and visit `http://localhost:3000`
 
 ## Usage
 
+### With Spotify Integration (Recommended)
+1. **Connect to Spotify** by clicking the "Connect Spotify" button
+2. **Authorize the app** to access your listening data
+3. **Fill out your current preferences** (the form will auto-enhance with your Spotify data)
+4. **Get AI recommendations** based on your actual listening history
+
+### Without Spotify
 1. **Select your preferred genres** by clicking on the genre buttons
 2. **Choose your current mood** from the dropdown menu
 3. **Set your energy level** (Low, Medium, High)
@@ -77,17 +97,27 @@ src/
 └── index.css                  # Tailwind CSS imports and custom styles
 ```
 
+## Spotify Integration
+
+The app leverages Spotify's Web API to:
+- **Fetch Top Tracks & Artists**: Analyzes your most-played music
+- **Get Recently Played**: Uses your recent listening for fresh recommendations
+- **Audio Feature Analysis**: Examines energy, valence, danceability, and tempo
+- **Genre Mapping**: Extracts genres from your favorite artists
+- **Personalized Recommendations**: Combines AI with your actual music taste
+
 ## AI Integration
 
-The app currently includes:
-- **Mock AI Service**: Demonstrates intelligent recommendation logic based on user preferences
-- **OpenAI Integration Ready**: Commented code for easy integration with OpenAI's GPT API
+The app includes:
+- **Groq AI Integration**: Fast AI recommendations using Llama 3 model
+- **Spotify-Enhanced AI**: Uses your listening data for more accurate recommendations
+- **Smart Fallbacks**: Falls back to intelligent mock recommendations if AI is unavailable
 - **Extensible Architecture**: Easy to add more AI providers or recommendation algorithms
 
-To enable full OpenAI integration:
-1. Uncomment the `callOpenAIAPI` function in `src/services/aiService.ts`
-2. Replace the mock service call with the actual API call
-3. Add your OpenAI API key to the environment variables
+To enable Groq AI:
+1. Get a free API key from [Groq Console](https://console.groq.com/)
+2. Add `REACT_APP_GROQ_API_KEY` to your environment variables
+3. The app automatically uses AI when the key is available
 
 ## Customization
 
@@ -126,31 +156,9 @@ theme: {
 ## Available Scripts
 
 - `npm start` - Runs the app in development mode
-- `npm build` - Builds the app for production
+- `npm run build` - Builds the app for production
 - `npm test` - Launches the test runner
-- `npm eject` - Ejects from Create React App (irreversible)
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Commit your changes: `git commit -m 'Add amazing feature'`
-4. Push to the branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Future Enhancements
-
-- 🎵 Spotify/Apple Music integration for direct playback
-- 📊 User listening history tracking
-- 🤝 Social features for sharing recommendations
-- 📈 Advanced analytics and recommendation tracking
-- 🔗 Integration with more music streaming platforms
-- 🎤 Voice input for hands-free interaction
-
-## Support
-
-If you encounter any issues or have questions, please open an issue on the GitHub repository.
+MIT License - Feel free to use and modify!

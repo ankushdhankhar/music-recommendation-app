@@ -34,17 +34,15 @@ export const getMusicRecommendations = async (preferences: UserPreferences, useS
     ? generateSpotifyBasedRecommendations(preferences, spotifyData)
     : generateMockRecommendations(preferences);
     
-  return recommendations;
+  return shuffleArray(recommendations).slice(0, 4); // Added shuffling for variety
 };
 
 // Mock function to generate recommendations based on preferences
-// Replace this with actual OpenAI API call in production
 const generateMockRecommendations = (preferences: UserPreferences): Recommendation[] => {
   const { genres, mood, energy, favoriteArtists } = preferences;
   
   const recommendations: Recommendation[] = [];
   
-  // Generate recommendations based on genres and mood
   if (genres.includes('Rock') && mood === 'Energetic') {
     recommendations.push({
       title: "Don't Stop Believin'",
@@ -99,7 +97,6 @@ const generateMockRecommendations = (preferences: UserPreferences): Recommendati
     });
   }
   
-  // Add recommendations based on favorite artists
   if (favoriteArtists.toLowerCase().includes('taylor swift')) {
     recommendations.push({
       title: "Anti-Hero",
@@ -118,7 +115,6 @@ const generateMockRecommendations = (preferences: UserPreferences): Recommendati
     });
   }
   
-  // Fallback recommendations if nothing specific matches
   if (recommendations.length === 0) {
     recommendations.push(
       {
@@ -136,8 +132,7 @@ const generateMockRecommendations = (preferences: UserPreferences): Recommendati
     );
   }
   
-  // Limit to 3-4 recommendations
-  return recommendations.slice(0, Math.min(4, recommendations.length));
+  return recommendations;
 };
 
 // Generate recommendations based on Spotify listening data
@@ -145,11 +140,9 @@ const generateSpotifyBasedRecommendations = (preferences: UserPreferences, spoti
   const recommendations: Recommendation[] = [];
   const { topArtists, recentlyPlayed, audioFeatures } = spotifyData;
   
-  // Analyze user's music taste from Spotify data
   const topGenres = extractTopGenres(topArtists);
   const energyProfile = analyzeEnergyProfile(audioFeatures, preferences.energy);
   
-  // Generate recommendations based on top artists and similar styles
   topArtists.slice(0, 3).forEach((artist, index) => {
     const similarTrack = findSimilarTrackRecommendation(artist, preferences.mood, energyProfile);
     if (similarTrack) {
@@ -163,7 +156,6 @@ const generateSpotifyBasedRecommendations = (preferences: UserPreferences, spoti
     }
   });
   
-  // Add recommendations based on audio features
   if (energyProfile.isHighEnergy && preferences.mood === 'Energetic') {
     recommendations.push({
       title: "Pump It Up",
@@ -182,7 +174,6 @@ const generateSpotifyBasedRecommendations = (preferences: UserPreferences, spoti
     });
   }
   
-  // Recommend based on recent listening patterns
   if (recentlyPlayed.length > 0) {
     const recentArtist = recentlyPlayed[0].artists[0].name;
     recommendations.push({
@@ -193,7 +184,7 @@ const generateSpotifyBasedRecommendations = (preferences: UserPreferences, spoti
     });
   }
   
-  return recommendations.slice(0, 4);
+  return shuffleArray(recommendations).slice(0, 4);
 };
 
 // Extract top genres from user's top artists
@@ -228,8 +219,6 @@ const analyzeEnergyProfile = (audioFeatures: SpotifyListeningData['audioFeatures
 
 // Find similar track recommendation based on artist and mood
 const findSimilarTrackRecommendation = (artist: any, mood: string, energyProfile: any) => {
-  // This would ideally call Spotify's recommendation API or use a music database
-  // For demo purposes, we'll return mock similar tracks
   const similarTracks = {
     'Taylor Swift': {
       title: 'Lavender Haze',
@@ -253,6 +242,8 @@ const findSimilarTrackRecommendation = (artist: any, mood: string, energyProfile
 
 // Groq AI API integration for enhanced recommendations
 const getGroqRecommendations = async (preferences: UserPreferences, spotifyData?: SpotifyListeningData | null): Promise<Recommendation[]> => {
+  const randomSeed = Math.floor(Math.random() * 10000); // Added to vary output
+  
   let prompt = `You are a music recommendation expert. Based on these preferences, suggest 3-4 specific songs:
 
 User Preferences:
@@ -260,7 +251,8 @@ User Preferences:
 - Current Mood: ${preferences.mood}
 - Energy Level: ${preferences.energy}
 - Recently Listened: ${preferences.recentlyListened || 'Not specified'}
-- Favorite Artists: ${preferences.favoriteArtists || 'Not specified'}`;
+- Favorite Artists: ${preferences.favoriteArtists || 'Not specified'}
+- Session ID (for variation): ${randomSeed}`;
   
   if (spotifyData) {
     const topArtists = spotifyData.topArtists.slice(0, 5).map(a => a.name).join(', ');
@@ -290,9 +282,9 @@ Provide recommendations as a JSON array with this exact format:
     "genre": "Genre",
     "reason": "Why this matches their taste and current mood"
   }
-]
+]`;
 
-Ensure recommendations match their mood (${preferences.mood}) and energy level (${preferences.energy}). Include both popular and lesser-known tracks that fit their taste.`;
+  console.log("Prompt sent to Groq:\n", prompt); // Debug log
 
   try {
     const completion = await groq.chat.completions.create({
@@ -303,7 +295,8 @@ Ensure recommendations match their mood (${preferences.mood}) and energy level (
         }
       ],
       model: 'llama3-8b-8192',
-      temperature: 0.7,
+      temperature: 0.85,
+      top_p: 0.9,
       max_tokens: 1000,
     });
 
@@ -312,7 +305,6 @@ Ensure recommendations match their mood (${preferences.mood}) and energy level (
       throw new Error('No content received from Groq');
     }
 
-    // Extract JSON from the response
     const jsonMatch = content.match(/\[\s*{[\s\S]*}\s*\]/);
     if (!jsonMatch) {
       throw new Error('No valid JSON found in response');
@@ -320,14 +312,21 @@ Ensure recommendations match their mood (${preferences.mood}) and energy level (
 
     const recommendations: Recommendation[] = JSON.parse(jsonMatch[0]);
     
-    // Add Spotify URLs if possible
-    return recommendations.map(rec => ({
-      ...rec,
-      spotifyUrl: `https://open.spotify.com/search/${encodeURIComponent(rec.title + ' ' + rec.artist)}`
-    }));
+    return shuffleArray(
+      recommendations.map(rec => ({
+        ...rec,
+        spotifyUrl: `https://open.spotify.com/search/${encodeURIComponent(rec.title + ' ' + rec.artist)}`
+      }))
+    ).slice(0, 4);
     
   } catch (error) {
     console.error('Error calling Groq API:', error);
     throw error;
   }
 };
+
+// Helper to shuffle recommendation results
+const shuffleArray = <T,>(array: T[]): T[] =>
+  array.map(a => [Math.random(), a] as [number, T])
+       .sort((a, b) => a[0] - b[0])
+       .map(a => a[1]);

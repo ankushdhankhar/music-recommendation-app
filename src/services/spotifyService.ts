@@ -89,6 +89,8 @@ class SpotifyService {
       `scope=${encodeURIComponent(scopes.join(' '))}&` +
       `show_dialog=true`;
 
+
+    console.log("SPOTIFY AUTH URL:", authUrl);  
     return authUrl;
   }
 
